@@ -62,13 +62,19 @@ class ViewController: UIViewController {
             guard let self = self else { return }
             print("tap")
             
-            self.getNumberData(a: 10, b: 6)
+//            self.getNumberData(a: 10, b: 6)
 //            self.getUserAndPost()
 //            self.getErrorData()
+            
+            Task {
+                await self.fetchMutipleData()
+            }
             
         }.disposed(by: disposeBag)
     }
     
+    
+    // MARK: -- Method
     func getNumberData(a: Int, b: Int) {
         Task {
             // await = 비동기 함수가 끝날 때까지 기다림
@@ -104,6 +110,10 @@ class ViewController: UIViewController {
      let userData = await user => 2초 후 실행
      let postsData = await posts => 3초 후 실행
      -> 2초, 3초 => 3초 후 실행
+     
+     Task {
+        await getAsyncLetUserAndPost()
+     }
      */
     func getAsyncLetUserAndPost() {
         print("taskData()")
@@ -159,6 +169,30 @@ class ViewController: UIViewController {
     func timePost() async -> String {
         await Task.sleep(3 * 1_000_000_000) // 3초 대기
         return "Posts Data"
+    }
+    
+    /*
+     MARK: TaskGroup: 병렬 작업 최적화
+     await withTaskGroup(of: Type.self) { group in ... } 으로 실행하면
+     안에 있는 group.addTask { ... } 개별적인 비동기 작업을 추가 후 순차적으로 실행
+     for await을 통해 완료된 작업의 결과를 순차적으로 가져옴
+     
+     Task {
+        await fetchMutipleData()
+     }
+     */
+    func fetchMutipleData() async {
+        await withTaskGroup(of: String.self) { group in
+            for i in 0..<3 {
+                group.addTask {
+                    return "Task \(i) 완료"
+                }
+            }
+            
+            for await result in group {
+                print("fetchMutipleData - result = \(result)")
+            }
+        }
     }
     
     // 에러까지 받을 수 있는 메소드
